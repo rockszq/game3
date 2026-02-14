@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记忆回廊 - 互动小说</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #e94560;
+            --primary-dark: #c73e54;
+            --bg-dark: #0a0a0f;
+            --bg-mid: #151520;
+            --bg-light: #1e1e2e;
+            --text: #f0f0f5;
+            --text-dim: #8888a0;
+            --danger: #ff4757;
+            --safe: #2ed573;
+            --warning: #ffa502;
+            --magic: #a855f7;
+        }
+
+        body { 
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; 
+            background: var(--bg-dark);
+            min-height: 100vh; 
+            color: var(--text); 
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 动态背景层 */
+        .ambient-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+            transition: all 1.5s ease;
+        }
+
+        .ambient-bg.magic {
+            background: radial-gradient(ellipse at center, #2d1b4e 0%, #0f0c29 100%);
+            animation: magicPulse 4s ease-in-out infinite;
+        }
+
+        .ambient-bg.danger {
+            background: radial-gradient(ellipse at center, #3d1b1b 0%, #0f0c0c 100%);
+        }
+
+        .ambient-bg.ending {
+            background: radial-gradient(ellipse at center, #1b3d2e 0%, #0c0f0c 100%);
+        }
+
+        @keyframes magicPulse {
+            0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+            50% { filter: hue-rotate(30deg) brightness(1.2); }
+        }
+
+        /* 已移除粒子效果：会造成DOM元素累积和性能问题 */
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; }
+        /* 开场画面 - 电影感 */
+        .intro-screen { 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: linear-gradient(180deg, rgba(10,10,15,0.95) 0%, rgba(20,20,35,0.98) 100%);
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1000; 
+            transition: opacity 1.2s ease, transform 1.2s ease;
+        }
+
+        .intro-screen.hidden { 
+            opacity: 0; 
+            pointer-events: none;
+            transform: scale(1.1);
+        }
+
+        .title { 
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            margin-bottom: 20px; 
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            animation: titleReveal 2s ease-out;
+            background: linear-gradient(180deg, #fff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(233, 69, 96, 0.3);
+            font-weight: 300;
+        }
+
+        .subtitle { 
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            color: var(--text-dim); 
+            margin-bottom: 60px; 
+            animation: fadeInUp 1s ease 0.5s both;
+            letter-spacing: 0.2em;
+            text-align: center;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+
+        .start-btn { 
+            padding: 18px 50px; 
+            font-size: 1rem;
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 0;
+            cursor: pointer; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 1s ease 1s both;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: var(--primary);
+            transition: left 0.4s ease;
+            z-index: -1;
+        }
+
+        .start-btn:hover { 
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(233, 69, 96, 0.3);
+        }
+
+        .start-btn:hover::before {
+            left: 0;
+        }
+        /* 命名界面 */
+        .naming-screen { 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh;
+            animation: fadeIn 0.8s ease;
+            padding: 20px;
+        }
+
+        .naming-screen.active { display: flex; }
+
+        .naming-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 50px 40px;
+            max-width: 450px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .naming-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-weight: 300;
+            letter-spacing: 0.2em;
+        }
+
+        .naming-subtitle {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+            font-style: italic;
+        }
+
+        .input-group { 
+            margin: 25px 0; 
+            width: 100%;
+        }
+
+        .input-group label { 
+            display: block; 
+            margin-bottom: 12px; 
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .input-group input { 
+            width: 100%; 
+            padding: 16px; 
+            border: none;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            background: transparent;
+            color: white; 
+            font-size: 1.1rem; 
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus { 
+            outline: none; 
+            border-bottom-color: var(--primary);
+            background: rgba(233, 69, 96, 0.05);
+        }
+
+        .confirm-btn { 
+            margin-top: 40px; 
+            width: 100%;
+            padding: 18px; 
+            background: var(--primary);
+            border: none;
+            color: white; 
+            font-size: 0.9rem; 
+            cursor: pointer; 
+            transition: all 0.3s;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .confirm-btn:hover { 
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.3);
+        }
+        .game-screen { display: none; flex-direction: column; min-height: 100vh; animation: fadeIn 0.5s ease; }
+        .game-screen.active { display: flex; }
+        .status-bar { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); border: 1px solid rgba(233, 69, 96, 0.2); }
+        .memory-indicator { display: flex; align-items: center; gap: 10px; }
+        .memory-bar { width: 200px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
+        .memory-fill { height: 100%; background: linear-gradient(90deg, #e94560, #ff6b6b); transition: width 0.5s ease; box-shadow: 0 0 10px rgba(233, 69, 96, 0.5); }
+        .suspicion-indicator { color: #ffd93d; font-size: 0.9em; }
+        .story-container { flex: 1; background: rgba(0,0,0,0.2); padding: 30px; border-radius: 20px; line-height: 1.8; font-size: 1.1em; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden; max-width: 520px; margin: 0 auto; }
+        .story-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #e94560, transparent); }
+                .story-container p { margin-bottom: 1.4em; }
+                .story-line { opacity: 0; transform: translateY(8px); animation: fadeUp 0.4s ease forwards; }
+                        .typewriter { cursor: pointer; border-right: 2px solid #e94560; }
+                
+                @keyframes fadeUp { to { opacity: 1; transform: none; } }
+        .scene-title { color: #e94560; font-size: 1.3em; margin-bottom: 15px; font-weight: bold; }
+        .dialogue { margin: 15px 0; padding-left: 20px; border-left: 3px solid #e94560; }
+        .choices-container { display: flex; flex-direction: column; gap: 15px; }
+        .choice-btn { padding: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(233, 69, 96, 0.3); border-radius: 15px; color: #eaeaea; cursor: pointer; text-align: left; transition: all 0.3s; position: relative; overflow: hidden; }
+        .choice-btn:hover { background: rgba(233, 69, 96, 0.1); border-color: #e94560; transform: translateX(10px); }
+        .choice-btn:active { transform: scale(0.97); background: rgba(233, 69, 96, 0.2); }
+        .choice-btn::before { content: '▸'; position: absolute; left: -20px; opacity: 0; transition: all 0.3s; color: #e94560; }
+        .choice-btn:hover::before { left: 10px; opacity: 1; }
+        
+        .memory-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 999; transition: opacity 0.5s; }
+        .memory-flash.active { animation: flash 1s ease; }
+        @keyframes flash { 0%,100% { opacity: 0; } 50% { opacity: 0.8; } }
+        .magic-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, transparent 0%, rgba(128, 0, 128, 0.3) 100%); pointer-events: none; opacity: 0; transition: opacity 1s; z-index: 50; }
+        .magic-overlay.active { opacity: 1; animation: pulse 3s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+        .butterfly { position: fixed; width: 30px; height: 30px; background: linear-gradient(45deg, #e94560, #ffd93d); clip-path: polygon(50% 0%, 80% 20%, 100% 50%, 80% 80%, 50% 100%, 20% 80%, 0% 50%, 20% 20%); opacity: 0; pointer-events: none; z-index: 100; animation: fly 4s ease-in-out; }
+        @keyframes fly { 0% { transform: translate(0,0) rotate(0deg); opacity: 0; } 20% { opacity: 0.8; } 80% { opacity: 0.8; } 100% { transform: translate(100px,-100px) rotate(360deg); opacity: 0; } }
+        .ending-screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; animation: fadeIn 1s ease; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0a0a0f 0%, #151520 100%); z-index: 10000; padding: 20px; box-sizing: border-box; }
+        .ending-screen.active { display: flex; }
+        .ending-title { font-size: 2.5em; margin-bottom: 30px; color: #e94560; text-shadow: 0 0 20px rgba(233, 69, 96, 0.5); }
+        .ending-text { font-size: 1.2em; line-height: 1.8; max-width: 800px; margin-bottom: 40px; color: #eaeaea; overflow-y: auto; max-height: 60vh; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 15px; }
+        .restart-btn { padding: 15px 40px; background: linear-gradient(45deg, #e94560, #ff6b6b); border: none; border-radius: 30px; color: white; font-size: 1.1em; cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(233, 69, 96, 0.3); }
+        .restart-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(233, 69, 96, 0.4); }
+        
+        .restart-btn:hover { transform: scale(1.05); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes titleReveal { 
+            0% { opacity: 0; transform: translateY(50px) scale(0.8); filter: blur(10px); }
+            70% { opacity: 1; transform: translateY(0) scale(1.05); filter: blur(2px); }
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: #e94560; border-radius: 4px; }
+        @media (max-width: 600px) { 
+            body { overflow: auto; }
+            .title { font-size: 2em; } 
+            .story-container { padding: 20px; } 
+            .memory-bar { width: 100px; }
+            .status-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+            .story-container { line-height: 2; font-size: 1.05em; }
+            .naming-screen { padding: 20px; }
+            p { animation: fadeInUp 0.4s ease; }
+            .choices-container { 
+                position: sticky; 
+                bottom: 0; 
+                padding: 15px 0 20px; 
+                background: linear-gradient(transparent, #0a0a0f 40%); 
+            }
+            .story-container { 
+                background: none; 
+                border: none; 
+                padding: 18px 16px; 
+                overflow-y: auto; 
+                -webkit-overflow-scrolling: touch; 
+            }
+            .game-screen { min-height: auto; }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <!-- 动态背景层 -->
+    <div class="ambient-bg" id="ambientBg"></div>
+    <!-- 已移除particles层：会造成DOM元素累积和性能问题 -->
+    
+    <div class="memory-flash" id="memoryFlash"></div>
+    <div class="magic-overlay" id="magicOverlay"></div>
+
+    <div class="intro-screen" id="introScreen">
+        <h1 class="title">记忆回廊</h1>
+        <p class="subtitle">当爱被巫术侵蚀，记忆成为最后的战场</p>
+        <button class="start-btn" onclick="startGame()">进入故事</button>
+    </div>
+
+    <div class="naming-screen" id="namingScreen">
+        <div class="naming-card">
+            <h2 class="naming-title">设定角色</h2>
+            <p class="naming-subtitle">在故事开始前，告诉我你们的名字。</p>
+            <div class="input-group">
+                <label>女主角名字（大学生/Little）</label>
+                <input type="text" id="girlName" placeholder="输入名字..." maxlength="10">
+            </div>
+            <div class="input-group">
+                <label>男主角名字（Daddy Dom）</label>
+                <input type="text" id="manName" placeholder="输入名字..." maxlength="10">
+            </div>
+            <button class="confirm-btn" onclick="confirmNames()">开始旅程</button>
+        </div>
+    </div>
+
+    <div class="game-screen" id="gameScreen">
+        <div class="status-bar">
+            <div>
+                <div style="font-size: 0.9em; color: #888; margin-bottom: 5px;">Daddy的记忆完整度</div>
+                <div class="memory-indicator">
+                    <div class="memory-bar">
+                        <div class="memory-fill" id="memoryBar" style="width: 100%"></div>
+                    </div>
+                    <span id="memoryPercent">100%</span>
+                </div>
+            </div>
+            <div>
+                <div class="suspicion-indicator" id="suspicionText">
+                    巫术侵蚀：微弱
+                </div>
+                <div id="timeDisplay" style="color: #2ed573; font-size: 0.9em; margin-top: 5px;">
+                    第1天 · 潜伏期 · 剩余21天
+                </div>
+            </div>
+        </div>
+
+        <div class="story-container" id="storyContainer">
+            <div class="scene-title" id="sceneTitle">场景标题</div>
+            <div id="storyText">故事内容...</div>
+        </div>
+
+        <div class="choices-container" id="choicesContainer"></div>
+    </div>
+
+    <div class="ending-screen" id="endingScreen">
+        <h2 class="ending-title" id="endingTitle">结局标题</h2>
+        <div class="ending-text" id="endingText">结局内容...</div>
+        <button class="restart-btn" onclick="location.reload()">重新开始</button>
+    </div>
+
+    <!-- 唯一脚本引用：所有游戏逻辑在game.js中 -->
+    <script src="game.js"></script>
+</body>
+</html>
