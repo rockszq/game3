@@ -8,22 +8,22 @@ let gameState = {
     
     cluesFound: [],          // 发现的线索
     currentScene: 'prologue',
-    daysLeft: 21,            // 21天的合理时间框架
+    daysLeft: 21,            // 从7天改为21天
     currentPhase: 1,         // 当前阶段（1-3）
     antidoteProgress: 0,     // 解药进度
     triggeredEvents: [],     // 记录已触发的事件
     
-    // 游戏道具系统
-    inventory: [],           
+    // 新增：关键道具
+    inventory: [],           // 物品栏
     
-    // 关系状态跟踪
-    relationshipStatus: 'normal',  
+    // 新增：关系状态
+    relationshipStatus: 'normal',  // normal, confused, distant, hostile
     
-    // 反派心理状态
-    witchMood: 'confident',  
+    // 新增：林婉状态
+    witchMood: 'confident',  // confident, wary, desperate, defeated
     
-    // 主角内心挣扎度
-    struggleLevel: 50
+    // 新增：男主挣扎度
+    struggleLevel: 50        // 男主内心挣扎程度（0-100）
 };
 
 // 场景数据 - 优化后的21天剧情
@@ -43,20 +43,20 @@ const scenes = {
 
 你们最爱看的是《蝴蝶效应》。{manName}总说，如果能回到过去，他会在更早的时候找到你，保护你，让你永远不需要经历那些伤痛。你会笑着靠在他怀里，说现在就是最好的时刻。
 
-不久之前，{manName}说要去外地出差。你像往常一样帮他收拾行李，在玄关处被他拉进怀里，得到一个深情的吻。
+三周前，{manName}说要去外地出差十四天。你像往常一样帮他收拾行李，在玄关处被他拉进怀里，得到一个漫长的吻。
 
-"乖，等我回来。"他揉了揉你的头发，"这次可能会比较忙，但我会每天给你发消息。"
+"乖，等我回来。"他揉了揉你的头发。
 
 你目送他的车消失在夜色中，满心期待着重逢。就像之前的每一次分别一样，你以为一切都会和往常一样。
 
-但第二天，他没有像往常一样报平安。第三天，你收到了一条奇怪的短信——他说工作太忙，让你不要担心。随着时间推移，他的消息变得越来越简短，内容也很奇怪，不像平时的他。你开始感到不安——以你们三年的关系，他从来没有这样敷衍过你。`,
+但两周过去了，他没有联系你。没有短信，没有电话，就像人间蒸发了一样。`,
         choices: [
             { text: "主动打电话给他", next: 'phone_call', effect: () => {} },
             { text: "直接去别墅找他", next: 'go_to_villa', effect: () => { gameState.suspicion += 5; } }
         ]
     },
 
-    // ==================== 第一阶段：潜伏期（第1-2天） ====================
+    // ==================== 第一阶段：潜伏期（第1-7天） ====================
     phone_call: {
         title: "陌生的声音",
         text: `电话响了很久才被接起。
@@ -73,17 +73,19 @@ const scenes = {
 
 "等等，"他的语气突然变得困惑，"为什么我觉得你的声音很耳熟？我们是不是在哪里见过？"
 
-你听到背景里传来电视声音，然后是{manName}疲惫的声音："嗯...我有点累，想先休息一下..."
+你听到背景里传来一个轻柔的女声："{manName}，是谁呀？"
 
-"等等，我有什么事情想不起来了..."
+"不知道，说是我的...等等，我有什么事情想不起来了..."
 
-电话那头传来忙音。他挂断了。
+电话那头传来一阵杂音，然后是那个女声贴近话筒："不好意思，他最近身体不太舒服，需要休息。你是他同事吗？"
 
-你站在原地，手机从手中滑落。
+你认出了那个声音。是林婉，你的同班同学，那个总是笑得清纯无害的女孩。
 
-发生了什么？为什么Daddy不记得你了？为什么他这么疲惫？
+电话被挂断了。你站在原地，手机从手中滑落。
 
-你看了眼日历——他已经离开好几天了。`,
+发生了什么？为什么Daddy不记得你了？为什么林婉会在他身边？
+
+你看了眼日历——距离他回来已经过去十天了。`,
         choices: [
             { text: "立刻打车去别墅", next: 'arrival_phase1', effect: () => { gameState.suspicion += 5; gameState.daysLeft -= 1; } },
             { text: "先冷静下来，联系共同朋友打听情况", next: 'investigate_phase1', effect: () => { gameState.suspicion += 10; gameState.daysLeft -= 1; } }
@@ -94,25 +96,25 @@ const scenes = {
         title: "空荡的归处",
         text: `你等不及了，直接打车去了别墅。
 
-院子里，玫瑰因为多日无人照料而显得有些萎靡，秋千在秋风中孤独地摇晃。你输入密码——你的生日，门开了。
+院子里，玫瑰因为十四天无人照料而显得有些萎靡，秋千在秋风中孤独地摇晃。你输入密码——你的生日，门开了。
 
-屋内整洁得反常，像是有人刻意打扫过。{manName}的行李箱放在玄关，但他本人不在。
+屋内整洁得反常，像是有人刻意打扫过。{manName}的行李箱放在玄关，但人却不在。
 
 你走进客厅，发现茶几上放着一个陌生的女式包包。不是你的。
 
-心跳加速，你在别墅里四处寻找{manName}的身影。正在楼上搜索时，卧室的门开了。{manName}从里面走出来，头发微湿，显然是刚洗过澡。
+心跳加速，你走上楼梯，听到主卧传来水声。有人刚洗过澡。
 
-"你是...？"他看着你，眼中满是困惑。
+门开了。林婉穿着你的睡衣——那件{manName}买给你的粉色睡衣——从房间里走出来。她看到你，脸上闪过一丝惊讶，随即露出甜美的笑容。
 
-你的心如刀绞。曾经，他会在清晨用这两个字配合一个吻，慵懒而宠溺。现在，只剩下纯粹的疑惑。
+"呀，{girlName}，你怎么来了？"她歪着头，像是在看一个迷路的孩子，"{manName}在休息，他最近...记性不太好。"
 
-"我是{girlName}，"你努力控制着颤抖的声音，"你的...朋友。我们认识三年了。"
+"你为什么会在这里？为什么穿我的衣服？"你的声音在颤抖。
 
-"三年？"他皱眉，努力回想，"对不起，我完全不记得...等等，为什么我觉得你的声音很熟悉？"
+她眨了眨眼睛，一脸无辜："你的衣服？这是{manName}给我买的呀。他说我穿着很可爱，就像...就像以前的你一样。"
 
-这时，林婉从楼下走上来，看到这一幕显得很惊讶："{manName}，这位是...？"
+那一刻，你意识到有什么极其恐怖的事情发生了。
 
-她看向你，眼中闪过一丝复杂的情绪。`,
+你看了眼日历——距离他回来已经过去十天了。`,
         choices: [
             { text: "质问她到底做了什么", next: 'confront_witch_phase1', effect: () => { gameState.suspicion += 15; gameState.daysLeft -= 1; gameState.memoryLevel -= 3; }, type: 'danger' },
             { text: "要求见{manName}，当面确认", next: 'demand_meeting_phase1', effect: () => { gameState.daysLeft -= 1; } }
@@ -123,21 +125,19 @@ const scenes = {
         title: "隐秘的线索",
         text: `你强忍着心痛，开始联系你们共同的朋友。
 
-从一位与{manName}有生意往来的叔叔那里，你得知{manName}昨天就回来了，但他推掉了所有应酬，说身体不适需要静养。有邻居看见一个女孩在别墅附近徘徊，说是"关心朋友"，但别墅门锁着，她进不去。
+从一位与{manName}有生意往来的叔叔那里，你得知{manName}十天前就回来了，但他推掉了所有应酬，说身体不适需要静养。有人看见林婉进出他的别墅，说是"照顾病人"。
 
-你翻遍网络，在一个隐秘的玄学论坛发现了惊人的线索：林婉的家族来自西南边陲，世代研习某种古老的巫蛊术。这种术法有个奇特的限制——它只能篡改情感关联的记忆，无法抹去客观事实和个人本能。
+你翻遍网络，在一个隐秘的玄学论坛发现了惊人的线索：林婉的家族来自西南边陲，世代研习某种古老的巫蛊术，能够操控记忆与情感。而林婉，据说是个中高手。
 
-这意味着{manName}会忘记你们的感情经历，但不会忘记你的生日密码、你们看过的电影情节，以及那些深植于本能的亲昵举动。
+你想起一个月前的聚餐。那是{manName}第一次见你大学同学，他礼貌地请所有人吃饭。当时林婉坐在{manName}旁边，眼神中的崇拜几乎要溢出来。她"不小心"打翻了酒杯，{manName}脱下外套给她披上...
 
-你想起不久前，{manName}请你们宿舍室友吃饭。当时林婉坐在{manName}旁边，眼神中的崇拜几乎要溢出来。她"不小心"打翻了酒杯，{manName}脱下外套给她披上...
+那顿饭之后，林婉开始频繁出现在你身边，"偶遇"的次数越来越多。她总问你关于{manName}的喜好，问你们的相处细节，问那些只有你们两个人知道的秘密。
 
-那顿饭之后，林婉开始频繁出现在你身边，"偶遇"的次数越来越多。她总问你关于{manName}的喜好，问你们的相处细节，问那些只有室友才知道的小事。
-
-你当时只当是室友间的正常交流。现在回想起来，那分明是情报收集。
+你当时只当是闺蜜间的分享。现在回想起来，那分明是情报收集。
 
 这不是巧合。她在偷走你的Daddy，用一种超自然的方式。
 
-你看了眼日历——距离他离开已经过去了几天。`,
+你看了眼日历——距离他回来已经过去十天了。`,
         choices: [
             { text: "带着证据去别墅对质", next: 'arrival_confront_phase1', effect: () => { gameState.daysLeft -= 1; } },
             { text: "悄悄潜入别墅，寻找破解之法", next: 'sneak_in_phase1', effect: () => { gameState.suspicion += 10; gameState.daysLeft -= 1; } }
@@ -146,7 +146,7 @@ const scenes = {
 
     arrival_phase1: {
         title: "破碎的重逢",
-        text: `别墅的大门紧锁着，但你用生日密码轻松打开了门。这个细节让你心中燃起一丝希望——至少密码还没被更改。
+        text: `别墅的大门依然为你敞开，密码还是你的生日。这个细节让你心中燃起一丝希望。
 
 院子里，玫瑰开得正艳，秋千在微风中轻轻摇晃。一切都那么熟悉，却又那么陌生。
 
@@ -156,7 +156,7 @@ const scenes = {
 
 他的眼神迷茫，努力搜寻着记忆，却一无所获。更刺痛你的是，林婉从他身后走出，自然地挽住他的手臂。
 
-"这是{girlName}，"林婉勉强笑了笑，"她...她突然来访。"然后看向你，眼中闪过一丝警告，"{girlName}，你怎么突然来了？也不提前说一声。"
+"这是{girlName}，我的大学同学，"林婉柔声介绍，然后看向你，眼中闪过一丝警告，"{girlName}，你怎么突然来了？也不提前说一声。"
 
 她刻意强调的"同学"二字，像刀子一样扎进你心里。你们曾经是最亲密的恋人，现在却被定义为"同学"。
 
@@ -196,7 +196,7 @@ const scenes = {
         choices: [
             { text: "威胁要报警并公开她的秘密", next: 'threaten_phase1', effect: () => { gameState.suspicion += 20; }, type: 'danger' },
             { text: "假装示弱，暗中寻找机会", next: 'feign_weakness_phase1', effect: () => { gameState.suspicion += 5; gameState.daysLeft -= 2; } },
-            { text: "试图理解她的动机", next: 'understand_motivation_phase1', effect: () => { gameState.suspicion -= 5; gameState.corruptionLevel += 1; gameState.cluesFound.push('understanding'); } }
+            { text: "试图理解她的动机", next: 'understand_motivation_phase1', effect: () => { gameState.suspicion -= 5; gameState.corruptionLevel += 3; } }
         ]
     },
 
@@ -231,25 +231,25 @@ const scenes = {
         title: "撕破脸皮",
         text: `"不对劲！"你盯着林婉，声音因困惑和愤怒而颤抖，"你到底是谁？为什么要冒充我的身份？{manName}为什么会不记得我？还有你手上那个奇怪的手链..."
 
-林婉的脸色瞬间变得苍白。她环顾四周，发现{manName}不在场，这才松了一口气。
+林婉的脸色瞬间阴沉下来。她看了看四周，确认没有被注意，才冷笑道："既然你都知道了，那我也不必装了。是的，我施了术，那又怎样？"
 
-"你...你怎么会发现？"她的声音带着颤抖，"我还以为我的伪装天衣无缝..."
+她抬起手腕，那条诡异的手链泛着微光："你以为时间还很多？告诉你，巫术已经开始生效。我每天都在给他喝安神茶，每天给他讲'我们的故事'，每天巩固巫术的效力..."
 
-她缓缓抬起手腕，那条诡异的手链泛着幽暗的微光："没错，我在用巫术。每天给他喝我调制的安神茶，每天在他耳边讲述'我们的故事'，让虚假的记忆慢慢覆盖真实的回忆。"
+"你为什么要这样做？"你质问。
 
-"为什么要这样做？"你质问，"我们是室友，我一直把你当朋友！"
+林婉的声音颤抖着，眼中既有渴望又有痛苦："第一次见到他时，我就知道他是我的真命天子。而你，你凭什么拥有他？就因为你先认识他？这不公平！
 
-林婉的眼中闪过痛苦的回忆："你还记得大二那年吗？你生病住院，他整夜守在你病床前，握着你的手说'别怕，Daddy在这里'。那一刻，我躲在病房门外，看着你们...我多么希望能站在你的位置。
+你知道吗？我从小就能感知别人的情绪，看到他们内心最深的渴望。我能感觉到他对你的爱有多深，那让我嫉妒得发狂。
 
-从小到大，我总是被忽视。父母忙着生意，同学们觉得我古怪。只有在施展巫术时，我才感觉自己有价值。我母亲临终前说，巫术是我们林家的传承，也是我们获得幸福的唯一方式。"
+但我也有我的苦衷...我家世代传承巫术，这是我们生存的方式。我母亲临终前告诉我，如果找不到真爱，就要用巫术为自己创造幸福。"
 
-她的声音越来越坚定："当我发现他对你的深情时，我知道我必须行动。不是因为嫉妒你，而是因为我太渴望被那样深深地爱着。我用了整整一个月的时间布局，每天观察你们的习惯，学习你们的相处模式..."
+她的眼眶红了："我以为只要让他爱上我，我就能获得真正的幸福..."
 
-她苦笑着："可惜，我还是低估了你们之间的羁绊。"`,
+你突然意识到，她也是一个可怜人。`,
         choices: [
             { text: "同情她，但坚持要救回Daddy", next: 'empathy_but_firm_phase1', effect: () => { gameState.suspicion -= 5; gameState.memoryLevel += 3; } },
-            { text: "警告她这是错误的", next: 'warn_her_phase1', effect: () => { gameState.suspicion += 10; gameState.corruptionLevel += 5; gameState.witchMood = 'wary'; }, type: 'danger' },
-            { text: "试图说服她放弃", next: 'persuade_her_phase1', effect: () => { gameState.suspicion -= 8; gameState.corruptionLevel += 3; gameState.witchMood = 'wary'; } }
+            { text: "警告她这是错误的", next: 'warn_her_phase1', effect: () => { gameState.suspicion += 10; gameState.corruptionLevel += 5; }, type: 'danger' },
+            { text: "试图说服她放弃", next: 'persuade_her_phase1', effect: () => { gameState.suspicion -= 10; gameState.corruptionLevel += 8; } }
         ]
     },
 
@@ -282,11 +282,15 @@ const scenes = {
 
 林婉的左手腕上戴着一个奇怪的手链，上面串着细小的骨头和符咒，在灯光下泛着诡异的光泽。那是巫蛊师的标志。
 
-你发现了一个关键细节：当{manName}开始表现出困惑或试图回忆时，林婉会轻声念诵某种咒语，同时用手链轻触他的手臂。只有在这种双重作用下，{manName}的眼神才会变得迷茫，像是被抽走了灵魂。
+她靠近{manName}时，手链会发出微弱的红光。而{manName}的眼神也会随之变得更加迷茫，像是被抽走了灵魂。
 
-你注意到厨房的桌子上放着一个茶杯，里面的茶水呈现出不自然的淡紫色，散发着淡淡的异香。那是给{manName}喝的"安神茶"——实则是巩固巫术的药剂，需要配合咒语和手链接触才能发挥完全效果。
+你注意到厨房的桌子上放着一个茶杯，里面的茶水呈现出不自然的淡紫色，散发着淡淡的异香。那是给{manName}喝的"安神茶"——实则是巩固巫术的药剂。
 
-这意味着如果你能在她施法时干扰她，就能给{manName}争取到回忆的机会。你也注意到，当林婉不在施法状态时，{manName}偶尔会不自觉地做出一些亲昵举动——他的本能还在抵抗巫术。`,
+必须想办法换掉那杯茶，或者找到解药。你也注意到，每当{manName}表现出困惑或试图回忆时，林婉就会紧张地摸一摸那个手链。
+
+那个手链，可能是关键。
+
+你还注意到，林婉虽然表现得很亲密，但{manName}偶尔会不自觉地拉开一点距离——他的本能还在抵抗。`,
         choices: [
             { text: "假装帮忙，趁机倒掉毒茶", next: 'poison_tea_phase1', effect: () => { gameState.antidoteProgress += 30; gameState.suspicion += 10; } },
             { text: "寻找机会夺取手链", next: 'snatch_bracelet_phase1', effect: () => { gameState.suspicion += 20; gameState.memoryLevel += 10; }, type: 'danger' },
@@ -314,7 +318,7 @@ const scenes = {
 
 林婉的脸色变得很难看，她的手链开始发出更强烈的光芒。`,
         choices: [
-            { text: "讲述你们相识的故事", next: 'memory_lane_phase1', effect: () => { gameState.memoryLevel += 15; }, type: 'safe' },
+            { text: "讲述你们相识的故事", next: 'memory_lane_phase1', effect: () => { gameState.memoryLevel += 12; }, type: 'safe' },
             { text: "带他去影音室，重温《蝴蝶效应》", next: 'movie_night_phase1', effect: () => { gameState.memoryLevel += 15; gameState.corruptionLevel += 3; } }
         ]
     },
@@ -350,7 +354,7 @@ const scenes = {
 
 你又从包里拿出一张照片——你们在小花园的合影，你坐在秋千上，他在你身后推，两个人都笑得像个孩子。
 
-"这是前几天拍的，就在你出差前。你说，等玫瑰花开的时候，我们要一起修剪枝叶..."
+"这是上个月拍的，就在你出差前。你说，等玫瑰花开的时候，我们要一起修剪枝叶..."
 
 {manName}接过照片，手指轻轻抚过画面。他的眼眶红了。
 
@@ -397,15 +401,15 @@ const scenes = {
         title: "危险的博弈",
         text: `"我知道你的秘密，"你压低声音，"林家祖传的巫蛊术，操控记忆，窃取情感。如果我把这些告诉{manName}，告诉警方，告诉所有人，你会有什么下场？"
 
-林婉的笑容消失了。她的表情变得严肃而坚定。
+林婉的笑容消失了。她的眼睛变得冰冷，像是蛇盯着猎物。
 
-"你以为威胁有用吗？"她平静地说，"巫术已经开始生效，但我不会让他完全忘记你。我只是...重新安排我们的关系。你仍然可以是他生活的一部分，但不再是最重要的那一个。"
+"你以为你很聪明？"她轻声说，"太晚了。巫术已经开始生效，再过几周，他就会彻底忘记你，而我，会成为他唯一的记忆。"
 
-她的眼神中闪过一丝复杂的情绪："我不想伤害你，{girlName}。我只是太想要被爱的感觉了。你知道那种被人忽视、被人当作透明人的痛苦吗？"
+她抬起手，你感到一阵天旋地转。当你恢复意识时，你发现自己站在别墅外，大门紧锁。
 
-她轻叹一声："三天后再来，我们好好谈谈。一个人来，我们需要私下解决这件事。"
+你的口袋里多了一张纸条："三天后再来，我们好好谈谈。一个人来，否则他就永远醒不过来。"
 
-你意识到，她并非完全无情，但她的执念同样危险。`,
+你意识到，你低估了她的疯狂。但你也知道，她给你留了机会——这说明她还有顾虑。`,
         choices: [
             { text: "三天后独自赴约", next: 'negotiate_meeting_phase1', effect: () => { gameState.suspicion = 40; gameState.daysLeft -= 3; } },
             { text: "寻求外援，找懂行的人帮忙", next: 'seek_help_phase1', effect: () => { gameState.suspicion += 15; gameState.daysLeft -= 1; } }
@@ -528,10 +532,10 @@ const scenes = {
     wait_opportunity_phase1: { title: "等待", text: "你选择了等待，但这给了林婉更多时间加强巫术。", choices: [{ text: "进入第二阶段", next: 'phase2_start', effect: () => { gameState.currentPhase = 2; gameState.daysLeft -= 3; gameState.memoryLevel -= 5; gameState.corruptionLevel += 10; } }] },
     gentle_approach_phase1: { title: "温柔", text: "你选择了温柔的方式，让{manName}慢慢恢复。这是一个漫长的过程。", choices: [{ text: "进入第二阶段", next: 'phase2_start', effect: () => { gameState.currentPhase = 2; gameState.daysLeft -= 1; gameState.memoryLevel += 8; } }] },
 
-    // ==================== 第二阶段：侵蚀期（第3-14天） ====================
+    // ==================== 第二阶段：侵蚀期（第8-14天） ====================
     phase2_start: {
         title: "第二阶段：记忆侵蚀",
-        text: `时间在流逝，游戏开始至今已经过去了{21 - gameState.daysLeft}天。
+        text: `一周过去了。
 
 林婉的巫术比想象中更加顽固。虽然你成功阻止了最坏的情况，但{manName}的记忆仍在被缓慢侵蚀。
 
@@ -570,11 +574,11 @@ const scenes = {
 
 "不，"你坚定地说，"是我们。三年前，在市中心的那家意大利餐厅。你穿着深蓝色衬衫，我穿着白色连衣裙。你说我笑起来像阳光。"
 
-{manName}皱起眉头，努力回想。"我...我不确定...我的记忆很混乱...有时候我觉得你说得对，有时候又觉得林婉说得对。这让我很痛苦。"
+{manName}皱起眉头，努力回想。"我...我不确定...我的记忆很混乱..."
 
-林婉从厨房走出来，脸色有些苍白："{manName}，你又在纠结这些无意义的事情。你应该好好休息。"
+林婉从厨房走出来，手里端着两杯茶。"{manName}，该喝安神茶了。"
 
-她递给{manName}一杯茶，那杯茶呈现出不自然的淡紫色。{manName}看着你们两人，眼中满是困惑和痛苦——他正在两种截然不同的记忆中挣扎。`,
+那杯茶呈现出不自然的淡紫色。`,
         choices: [
             { text: "设法阻止他喝那杯茶", next: 'stop_tea_phase2', effect: () => { gameState.antidoteProgress += 15; gameState.suspicion += 10; } },
             { text: "观察他的反应，寻找其他机会", next: 'observe_reaction_phase2', effect: () => { gameState.corruptionLevel += 5; gameState.suspicion += 5; } },
@@ -833,7 +837,7 @@ const scenes = {
     // ==================== 第三阶段：危机期（第15-21天） ====================
     phase3_start: {
         title: "第三阶段：最终对决",
-        text: `时间紧迫，游戏开始至今已经过去了{21 - gameState.daysLeft}天，只剩下最后{gameState.daysLeft}天。
+        text: `最后一周了。
 
 林婉的巫术已经到了最后阶段。她开始更加频繁地施法，手链几乎一直发着红光。
 
@@ -859,17 +863,17 @@ const scenes = {
 
 "你不能带他走，"你说，"这不是爱，这是控制。"
 
-林婉的眼神变得复杂："你以为你很了解爱吗？这三年来，你得到了他全部的宠爱，而我只能在远处看着。你知道那种渴望被爱却得不到的痛苦吗？"
+林婉的眼神变得疯狂："你懂什么？我为他付出了这么多，我每天都在施法，每天都在承受反噬的痛苦..."
 
-她举起手链，开始念诵咒语："既然你不愿让开，那就别怪我了！"
+她抬起手腕，手链发出刺目的红光："既然你不让开，那就别怪我不客气！"
 
-手链发出刺目的红光，你感到一阵剧烈的头痛。但就在这时，{manName}突然站了出来。
+她开始念诵咒语，你感到一阵剧烈的头痛。但这一次，{manName}站了出来。
 
-"够了！"他大声说道，声音中带着前所未有的坚定，"林婉，停下！"
+"够了，"他说，声音坚定，"林婉，停下。"
 
 林婉愣住了："{manName}...？"
 
-"我不知道你对我做了什么，"他说，"但我知道一件事——我的心告诉我，我应该保护她。"
+"我不知道你对我做了什么，"他说，"但我知道，我的心告诉我，我应该保护她。"
 
 他走到你身边，握住你的手："{girlName}，我的宝宝...我想起来了。全部。"
 
@@ -923,7 +927,7 @@ const scenes = {
 
 你知道，你必须尽快找到他们，否则一切都将太迟。`,
         choices: gameState.antidoteProgress >= 80 ? 
-        [{ text: "迎接结局", next: 'show_ending', effect: () => { gameState.memoryLevel = Math.min(100, gameState.memoryLevel + 50); } }] :
+        [{ text: "迎接结局", next: 'show_ending', effect: () => { gameState.memoryLevel = 100; } }] :
         [{ text: "追赶他们", next: 'chase_them', effect: () => { gameState.daysLeft -= 1; gameState.suspicion += 20; }, type: 'danger' }]
     },
 
@@ -965,13 +969,13 @@ const scenes = {
 
 一切都消失了。
 
-当晨光透过窗帘洒进房间时，{girlName}睁开眼睛。床边站着一个陌生的男人，他温柔地看着她。
+当晨光透过窗帘洒进房间时，你睁开眼睛。床边站着一个陌生的男人，他温柔地看着你。
 
 "早上好，亲爱的，"他说，"昨晚睡得好吗？"
 
-她点点头，觉得这个名字很熟悉，但怎么也想不起来。
+你点点头，觉得这个名字很熟悉，但怎么也想不起来。
 
-在同一城市的另一间宿舍里，另一个{girlName}坐在床边，泪水无声地滑落。她记得一切，但没人相信她的话。手机里还保存着那条未发送的消息：
+在城市的另一端，你坐在宿舍里，泪水无声地滑落。你记得一切，但没人相信你的话。手机里还保存着那条未发送的消息：
 
 "Daddy，我找到你了..."
 
@@ -993,7 +997,7 @@ const scenes = {
 
 你再也没有去过城郊的那栋别墅，虽然每次经过那条路，心都会莫名其妙地痛。
 
-林婉和{manName}结婚了。你收到了请柬，但没有去。你总觉得，那本该是你的幸福，但你已经想不起来为什么。
+林婉和{manName}从此消失在你的生活中。你总觉得，那本该是你的幸福，但你已经想不起来为什么。
 
 有些爱，一旦被遗忘，就再也找不回来了。
 
@@ -1049,57 +1053,81 @@ const scenes = {
         ]
     },
 
-    // sacrifice_ending 结局已移除
+    true_love_ending: {
+        title: "结局：真爱无敌",
+        text: `林婉看着你们相拥的样子，终于崩溃了。
 
-    trauma_ending: {
-        title: "结局：心灵创伤",
-        text: `{manName}的记忆恢复了，但代价是高昂的。
+"为什么..."她跪在地上，泪水横流，"为什么你们的爱这么强大？为什么我用了这么多巫术，还是无法分开你们？"
 
-那些被巫术侵蚀的日子，在他心中留下了深深的伤痕。他记得你，记得你们的爱情，但也记得那些虚假的记忆片段——和林婉一起的画面，那些本不该存在的温暖时刻。
+你走向她，伸出手："因为真正的爱，不是占有，不是控制。真正的爱，是尊重，是信任，是即使忘记了一切，灵魂也会记得。"
 
-"{girlName}..."他看着你，眼中有着复杂的光芒，"我记得一切，但有些记忆...让我感到困惑和痛苦。"
+林婉抬起头，看着你。她的眼中，疯狂渐渐消散，取而代之的是一种深深的疲惫和...解脱？
 
-你能感受到他的挣扎——真实的爱与虚假的经历在他的意识中交织，形成了难以愈合的创伤。
+"我...我明白了，"她低声说，"我一直以为，只要让他爱上我，我就能得到幸福。但我错了。"
 
-林婉在反噬中陷入昏迷，她的巫术终于被打破。但{manName}需要时间来处理这些混乱的记忆。
+她摘下手链，将它交给你："这是解咒的方法。用你们的爱，可以彻底消除巫术的影响。"
 
-"给我一些时间，"他说，"我需要学会分辨哪些是真实的，哪些是被植入的。"
+她站起身，走向门外："我要离开了。去寻找...去寻找真正的爱。"
 
-你们的关系得以保存，但需要重新建立信任。有时候，拯救一个人的代价不仅仅是时间，还有心灵的完整。
+{manName}看着你，眼中满是爱意："{girlName}，我的宝宝...谢谢你，没有放弃我。"
 
-真爱或许能战胜巫术，但有些伤痕需要一生来愈合。`,
+你笑了："我永远不会放弃你，Daddy。"
+
+一年后，林婉从远方寄来一封信。她说她找到了自己的幸福——一个普通人，用真心打动了她。她学会了，爱不是巫术，而是两颗心的相遇。
+
+你们的故事，成为了传说——关于真爱如何战胜一切诅咒的传说。`,
         choices: [
-            { text: "创伤结局", next: 'end', effect: () => {}, ending: 'trauma_ending' }
+            { text: "隐藏结局", next: 'end', effect: () => {}, ending: 'true_love_ending' }
+        ]
+    },
+
+    sacrifice_ending: {
+        title: "结局：牺牲",
+        text: `按照老山道人的指导，你割破手指，将血滴入{manName}的眉心，然后亲吻他，将你们最美好的那段回忆——第一次实践的那个夜晚——作为祭品献上。
+
+你感到那段记忆在消逝，那种初遇的悸动，那种第一次完全交付自己的信任与羞耻...都在消散。
+
+但{manName}醒了。他看着你，眼神完全清明。
+
+"{girlName}...我的宝宝..."他抚摸你的脸，"我记得一切，除了...我们第一次见面时的细节？"
+
+你哭着笑了："没关系，我们可以创造新的回忆。"
+
+林婉在咒术反噬中昏迷，手链碎裂。你们报警，她将被送往专门处理超自然案件的机构。
+
+这不是完美的胜利，但你们保住了彼此。
+
+有时候，爱意味着牺牲。但只要有彼此，失去的记忆也可以重新创造。`,
+        choices: [
+            { text: "牺牲结局", next: 'end', effect: () => {}, ending: 'sacrifice_ending' }
         ]
     },
 
     redemption_ending: {
         title: "结局：救赎",
-        text: `你看着林婉，她正蜷缩在角落里，手链的光芒已经十分微弱。
+        text: `你没有选择对抗，而是选择了理解。
 
-"林婉，"你轻声说，"我知道你内心的痛苦。那种渴望被爱、被认可的感觉，我理解。"
+你走向林婉，轻轻抱住她。她僵住了，然后在你怀里颤抖起来。
 
-她抬起头，眼中满是泪水："你...你真的理解吗？从小到大，我总是被忽视，被当作怪胎。只有在施展巫术时，我才感觉自己有价值，感觉自己被需要。"
+"我知道你的痛苦，"你说，"我知道渴望被爱却得不到的感觉。但用巫术得到的爱，不会让你幸福。"
 
-{manName}走近她："林婉，我能感受到你的孤独。但用这种方式得到的关注，不是真正的爱。"
+林婉哭了，像个孩子："我...我不知道该怎么办...我已经走得太远了..."
 
-你继续说："每个人都有自己独特的价值，不需要通过操控别人来证明。你有感知他人情感的天赋，这本可以用来帮助别人，而不是伤害。"
+"还不晚，"你说，"你可以选择停止。选择相信，真正的爱会来的，只是需要时间和耐心。"
 
-林婉的手开始颤抖："可是...可是我不知道除了巫术，我还能做什么..."
+{manName}也走了过来："林婉，我不知道你经历了什么，但我知道，伤害别人不会让你的痛苦消失。"
 
-"你可以学会真诚地去爱，去被爱，"你说，"这需要时间，需要勇气，但值得一试。"
+林婉看着他们，眼中的疯狂渐渐消散。她摘下手链，将它摔在地上。
 
-经过长时间的沉默，林婉缓缓摘下手链。那件家族传承的法器，在她手中显得如此沉重。
+"我...我放弃，"她说，"我解除巫术。"
 
-"也许..."她轻声说，"也许我真的错了。也许真正的幸福，来自于接受真实的自己，而不是强迫别人来爱我。"
+随着手链的碎裂，{manName}的记忆如潮水般涌回。但这一次，没有痛苦，只有解脱。
 
-手链掉在地上，发出清脆的声响。巫术的力量彻底消散，{manName}的记忆完全恢复。
+三个月后，林婉成为了你们的朋友。她正在学习用正常的方式去爱，去被爱。
 
-几个月后，林婉开始学习心理咨询，用自己的天赋去真正帮助那些情感困扰的人。
+"谢谢你们，"她说，"谢谢你们让我明白，真正的爱是什么。"
 
-"谢谢你，"她对你们说，"谢谢你们没有放弃我，让我有机会重新开始。"
-
-真正的救赎，往往来自于理解和宽恕。`,
+有时候，最大的胜利不是战胜敌人，而是感化敌人。`,
         choices: [
             { text: "救赎结局", next: 'end', effect: () => {}, ending: 'redemption_ending' }
         ]
@@ -1121,42 +1149,37 @@ const scenes = {
 
 // 结局判定函数
 function getEndingSceneId() {
-    // 最差结局：时间耗尽
-    if (gameState.daysLeft <= 0) {
-        return 'time_ran_out';
-    }
-    
-    // 创伤结局：腐蚀度过高（最高优先级）
-    if (gameState.corruptionLevel > 70) {
-        return 'trauma_ending';
-    }
-    
-    // 完美结局：各项指标优秀
-    if (gameState.memoryLevel >= 85 && gameState.suspicion <= 25 && gameState.corruptionLevel <= 30) {
+    // 完美结局：记忆值>=90，且成功阻止林婉
+    if (gameState.memoryLevel >= 90 && gameState.suspicion >= 30) {
         return 'good_ending';
     }
     
-    // 创伤结局：中等腐蚀度但记忆恢复
-    if (gameState.corruptionLevel > 50 && gameState.memoryLevel >= 70) {
-        return 'trauma_ending';
+    // 隐藏结局：感化林婉（需要特定条件）
+    if (gameState.memoryLevel >= 80 && gameState.witchMood === 'desperate' && gameState.suspicion < 30) {
+        return 'true_love_ending';
     }
     
-    // 救赎结局：理解反派动机
-    if (gameState.memoryLevel >= 70 && gameState.cluesFound.includes('understanding')) {
+    // 救赎结局：选择理解林婉
+    if (gameState.memoryLevel >= 70 && gameState.cluesFound.includes('理解')) {
         return 'redemption_ending';
     }
     
-    // 好结局：记忆基本恢复
+    // 牺牲结局：使用牺牲记忆的方法
+    if (gameState.cluesFound.includes('sacrifice')) {
+        return 'sacrifice_ending';
+    }
+    
+    // 好结局：记忆值>=70
     if (gameState.memoryLevel >= 70) {
         return 'good_ending';
     }
     
-    // 普通结局：记忆部分恢复
+    // 普通结局：记忆值>=50
     if (gameState.memoryLevel >= 50) {
         return 'neutral_ending';
     }
     
-    // 最坏结局：记忆严重缺失
+    // 坏结局：记忆值<50
     return 'bad_ending_memory';
 }
 
@@ -1167,8 +1190,8 @@ function showEnding(endingId) {
         'neutral_ending': scenes.neutral_ending,
         'bad_ending_memory': scenes.bad_ending_memory,
         'time_ran_out': scenes.time_ran_out,
-        // 'sacrifice_ending': scenes.sacrifice_ending, // 已废弃
-        'trauma_ending': scenes.trauma_ending,
+        'true_love_ending': scenes.true_love_ending,
+        'sacrifice_ending': scenes.sacrifice_ending,
         'redemption_ending': scenes.redemption_ending
     };
     
@@ -1183,7 +1206,7 @@ function showEnding(endingId) {
     
     let text = ending.text.replace(/{girlName}/g, gameState.girlName)
                           .replace(/{manName}/g, gameState.manName)
-                          .replace(/\{21 - gameState.daysLeft\}/g, 21 - gameState.daysLeft)
+                          .replace(/{21 - gameState.daysLeft}/g, 21 - gameState.daysLeft)
                           .replace(/{gameState.memoryLevel}/g, gameState.memoryLevel)
                           .replace(/{gameState.cluesFound.length}/g, gameState.cluesFound.length);
     
@@ -1217,14 +1240,6 @@ function confirmNames() {
 }
 
 function loadScene(sceneId) {
-    // 新增：重置滚动位置（修复手机端定位问题）
-    const mainStoryContainer = document.getElementById('storyContainer');
-    const mainScreen = document.getElementById('gameScreen');
-    
-    if (mainStoryContainer) mainStoryContainer.scrollTo({ top: 0, behavior: 'smooth' });
-    if (mainScreen) mainScreen.scrollTo({ top: 0, behavior: 'smooth' });
-    window.scrollTo(0, 0); // 兼容部分移动端浏览器
-    
     // 时间耗尽优先检查
     if (gameState.daysLeft <= 0 && sceneId !== 'time_ran_out' && sceneId !== 'end') {
         showEnding('time_ran_out');
@@ -1258,70 +1273,15 @@ function loadScene(sceneId) {
                         .replace(/{suspicion}/g, gameState.suspicion)
                         .replace(/{corruptionLevel}/g, gameState.corruptionLevel);
     
-    // 逐段淡入显示效果
+    // 逐句呈现效果
     const storyContainer = document.getElementById('storyText');
-    storyContainer.innerHTML = '';
-    const paragraphs = text.split('\n\n').filter(p => p.trim());
-    let currentIdx = 0;
-    let isTyping = true;
+    storyContainer.innerHTML = text
+        .split('\n\n')
+        .filter(p => p.trim())
+        .map((p, index) => `<p class="story-line" style="--i:${index}">${p.replace(/\n/g, '<br>')}</p>`)
+        .join('');
 
-    // 逐段显示函数
-    function showNextParagraph() {
-        if (currentIdx >= paragraphs.length) {
-            isTyping = false;
-            renderChoices(); // 显示选项按钮
-            updateStatusBar(); // 在所有文本显示完成后更新状态栏
-            return;
-        }
-        
-        const p = document.createElement('p');
-        p.className = 'story-line';
-        p.style.opacity = '0';
-        p.style.transform = 'translateY(10px)';
-        p.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        p.innerHTML = paragraphs[currentIdx].replace(/\n/g, '<br>');
-        storyContainer.appendChild(p);
-        
-        // 强制回流触发过渡动画
-        requestAnimationFrame(() => {
-            p.style.opacity = '1';
-            p.style.transform = 'translateY(0)';
-            p.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        });
-        
-        currentIdx++;
-        // 每段延迟600ms自动显示下一段，点击可加速
-        setTimeout(showNextParagraph, 600);
-    }
-
-    // 点击跳过动画
-    storyContainer.onclick = () => {
-        if (!isTyping) return;
-        // 直接显示剩余所有段落
-        while (currentIdx < paragraphs.length) {
-            const p = document.createElement('p');
-            p.className = 'story-line';
-            p.innerHTML = paragraphs[currentIdx].replace(/\n/g, '<br>');
-            storyContainer.appendChild(p);
-            currentIdx++;
-        }
-        isTyping = false;
-        renderChoices();
-    };
-
-    showNextParagraph();
-
-    // 选项渲染函数将在showNextParagraph完成后调用
-
-    // 检查时间相关特殊事件
-    checkTimeEvents();
-};
-
-// 独立的选项渲染函数
-function renderChoices() {
-    const scene = scenes[gameState.currentScene];
-    if (!scene) return;
-    
+    // 生成选项
     const choicesContainer = document.getElementById('choicesContainer');
     choicesContainer.innerHTML = '';
 
@@ -1338,7 +1298,7 @@ function renderChoices() {
             btn.onclick = () => makeChoice(choice);
             choicesContainer.appendChild(btn);
         });
-    } else if (gameState.currentScene === 'end' || scene.ending) {
+    } else if (sceneId === 'end' || scene.ending) {
         // 游戏结束，显示重新开始按钮
         const btn = document.createElement('button');
         btn.className = 'choice-btn';
@@ -1346,7 +1306,12 @@ function renderChoices() {
         btn.onclick = () => location.reload();
         choicesContainer.appendChild(btn);
     }
-}
+
+    // 更新状态条
+    updateStatusBar();
+
+    // 检查时间相关特殊事件
+    checkTimeEvents();
 
     // 检查特殊效果
     if (sceneId.includes('memory') && gameState.memoryLevel < 50) {
@@ -1362,10 +1327,22 @@ function renderChoices() {
         document.getElementById('magicOverlay').classList.remove('active');
     }
 
-    // 蝴蝶特效已移除：避免视觉干扰影响阅读体验
+    // 蝴蝶特效 - 只在游戏界面触发
+    if (sceneId === 'movie_night_phase1' || sceneId === 'movie_trigger_phase2' || sceneId === 'final_awakening') {
+        createButterfly();
+        setTimeout(createButterfly, 1000);
+        setTimeout(createButterfly, 2000);
+    }
 }
 
-// createButterfly() 已移除：避免视觉干扰影响阅读体验
+function createButterfly() {
+    const butterfly = document.createElement('div');
+    butterfly.className = 'butterfly';
+    butterfly.style.left = Math.random() * window.innerWidth + 'px';
+    butterfly.style.top = Math.random() * window.innerHeight + 'px';
+    document.body.appendChild(butterfly);
+    setTimeout(() => butterfly.remove(), 4000);
+}
 
 function makeChoice(choice) {
     // 应用效果
@@ -1425,20 +1402,14 @@ function updateStatusBar() {
     // 更新时间显示
     const timeDisplay = document.getElementById('timeDisplay');
     if (timeDisplay) {
-        // 修正时间计算逻辑
-        const totalDays = 21;
-        const dayPassed = totalDays - gameState.daysLeft;
-        const currentDay = Math.max(1, dayPassed + 1); // 确保至少显示第1天
-        
+        const dayPassed = 21 - gameState.daysLeft;
         const phase = gameState.currentPhase;
         let phaseName = '';
         if (phase === 1) phaseName = '潜伏期';
         if (phase === 2) phaseName = '侵蚀期';
         if (phase === 3) phaseName = '危机期';
         
-        // 确保天数显示正确
-        const remainingDays = Math.max(0, gameState.daysLeft);
-        timeDisplay.innerHTML = `第${currentDay}天 · ${phaseName} · 剩余${remainingDays}天`;
+        timeDisplay.innerHTML = `第${dayPassed}天 · ${phaseName} · 剩余${gameState.daysLeft}天`;
         
         // 根据剩余时间改变颜色
         if (gameState.daysLeft <= 3) {
@@ -1504,4 +1475,17 @@ function showMessage(message) {
     }, 3000);
 }
 
-// 已移除粒子效果：该效果会导致DOM元素不断累积，造成性能问题
+// 初始化粒子效果
+document.addEventListener('DOMContentLoaded', () => {
+    const particlesContainer = document.getElementById('particles');
+    if (particlesContainer) {
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+            particlesContainer.appendChild(particle);
+        }
+    }
+});
