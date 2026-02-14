@@ -1315,6 +1315,22 @@ function loadScene(sceneId) {
 
     // 检查时间相关特殊事件
     checkTimeEvents();
+
+    // 检查特殊效果
+    if (sceneId.includes('memory') && gameState.memoryLevel < 50) {
+        document.getElementById('memoryFlash').classList.add('active');
+        setTimeout(() => {
+            document.getElementById('memoryFlash').classList.remove('active');
+        }, 1000);
+    }
+
+    if (sceneId.includes('witch') || sceneId.includes('magic') || sceneId.includes('ritual') || sceneId.includes('confront')) {
+        document.getElementById('magicOverlay').classList.add('active');
+    } else {
+        document.getElementById('magicOverlay').classList.remove('active');
+    }
+
+    // 蝴蝶特效已移除：避免视觉干扰影响阅读体验
 };
 
 // 独立的选项渲染函数
@@ -1346,23 +1362,6 @@ function renderChoices() {
         btn.onclick = () => location.reload();
         choicesContainer.appendChild(btn);
     }
-}
-
-    // 检查特殊效果
-    if (sceneId.includes('memory') && gameState.memoryLevel < 50) {
-        document.getElementById('memoryFlash').classList.add('active');
-        setTimeout(() => {
-            document.getElementById('memoryFlash').classList.remove('active');
-        }, 1000);
-    }
-
-    if (sceneId.includes('witch') || sceneId.includes('magic') || sceneId.includes('ritual') || sceneId.includes('confront')) {
-        document.getElementById('magicOverlay').classList.add('active');
-    } else {
-        document.getElementById('magicOverlay').classList.remove('active');
-    }
-
-    // 蝴蝶特效已移除：避免视觉干扰影响阅读体验
 }
 
 // createButterfly() 已移除：避免视觉干扰影响阅读体验
