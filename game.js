@@ -391,7 +391,7 @@ const scenes = {
 
 这是一个小小的突破。你知道她不会轻易放弃，但至少，你让她开始思考了。`,
         choices: [
-            { text: "给她时间，但要求见Daddy", next: 'negotiate_phase1', effect: () => { gameState.suspicion -= 10; gameState.daysLeft -= 2; } },
+            { text: "给她时间，但要求见Daddy", next: 'negotiate_phase1', effect: () => { gameState.suspicion -= 10; gameState.daysLeft -= 2; gameState.cluesFound.push('理解'); gameState.witchMood = 'wary'; } },
             { text: "趁机要求她解除巫术", next: 'demand_release_phase1', effect: () => { gameState.suspicion += 5; gameState.corruptionLevel += 5; } }
         ]
     },
@@ -879,7 +879,7 @@ const scenes = {
 
 林婉的手链突然断裂，巫术开始崩溃。`,
         choices: [
-            { text: "迎接结局", next: 'show_ending', effect: () => { gameState.memoryLevel = 100; } }
+            { text: "迎接结局", next: 'show_ending', effect: () => { gameState.memoryLevel = Math.min(100, gameState.memoryLevel + 20); } }
         ]
     },
 
@@ -899,13 +899,13 @@ const scenes = {
 
 林婉站在一旁，看着这一幕，手中的手链渐渐失去了光芒。`,
         choices: [
-            { text: "迎接结局", next: 'show_ending', effect: () => { gameState.memoryLevel = 100; } }
+            { text: "迎接结局", next: 'show_ending', effect: () => { gameState.memoryLevel = Math.min(100, gameState.memoryLevel + 15); } }
         ]
     },
 
     use_antidote: {
         title: "解药",
-        text: gameState.antidoteProgress >= 80 ? 
+        text: () => gameState.antidoteProgress >= 80 ? 
         `你拿出准备好的解药，滴入{manName}的口中。
 
 片刻后，他的眼神变得清明。他看着你，眼中满是爱意。
@@ -926,8 +926,8 @@ const scenes = {
 她带着{manName}离开了。你追了出去，但他们已经消失在夜色中。
 
 你知道，你必须尽快找到他们，否则一切都将太迟。`,
-        choices: gameState.antidoteProgress >= 80 ? 
-        [{ text: "迎接结局", next: 'show_ending', effect: () => { gameState.memoryLevel = 100; } }] :
+        choices: () => gameState.antidoteProgress >= 80 ? 
+        [{ text: "迎接结局", next: 'show_ending', effect: () => { gameState.memoryLevel = Math.min(100, gameState.memoryLevel + 20); } }] :
         [{ text: "追赶他们", next: 'chase_them', effect: () => { gameState.daysLeft -= 1; gameState.suspicion += 20; }, type: 'danger' }]
     },
 
@@ -951,7 +951,7 @@ const scenes = {
 
 林婉的手链彻底碎裂。`,
         choices: [
-            { text: "迎接结局", next: 'show_ending', effect: () => { gameState.memoryLevel = 100; } }
+            { text: "迎接结局", next: 'show_ending', effect: () => { gameState.memoryLevel = Math.min(100, gameState.memoryLevel + 15); } }
         ]
     },
 
@@ -975,7 +975,7 @@ const scenes = {
 
 你点点头，觉得这个名字很熟悉，但怎么也想不起来。
 
-在城市的另一端，你坐在宿舍里，泪水无声地滑落。你记得一切，但没人相信你的话。手机里还保存着那条未发送的消息：
+在城市的另一端，真正的你坐在宿舍里，泪水无声地滑落。你记得一切，但没人相信你的话。手机里还保存着那条未发送的消息：
 
 "Daddy，我找到你了..."
 
@@ -1149,11 +1149,6 @@ const scenes = {
 
 // 结局判定函数
 function getEndingSceneId() {
-    // 完美结局：记忆值>=90，且成功阻止林婉
-    if (gameState.memoryLevel >= 90 && gameState.suspicion >= 30) {
-        return 'good_ending';
-    }
-    
     // 隐藏结局：感化林婉（需要特定条件）
     if (gameState.memoryLevel >= 80 && gameState.witchMood === 'desperate' && gameState.suspicion < 30) {
         return 'true_love_ending';
@@ -1164,18 +1159,18 @@ function getEndingSceneId() {
         return 'redemption_ending';
     }
     
-    // 牺牲结局：使用牺牲记忆的方法
-    if (gameState.cluesFound.includes('sacrifice')) {
+    // 牺牲结局：通过老山道人线索，且记忆恢复不充分
+    if (gameState.cluesFound.includes('老山道人') && gameState.antidoteProgress >= 60 && gameState.memoryLevel < 65) {
         return 'sacrifice_ending';
     }
     
-    // 好结局：记忆值>=70
-    if (gameState.memoryLevel >= 70) {
+    // 好结局：记忆值较高
+    if (gameState.memoryLevel >= 80) {
         return 'good_ending';
     }
     
-    // 普通结局：记忆值>=50
-    if (gameState.memoryLevel >= 50) {
+    // 普通结局：记忆值中等
+    if (gameState.memoryLevel >= 55) {
         return 'neutral_ending';
     }
     
@@ -1265,13 +1260,21 @@ function loadScene(sceneId) {
     // 更新UI
     document.getElementById('sceneTitle').textContent = scene.title;
     
+    // 动态场景支持：允许 text/choices 使用函数按当前状态实时生成
+    const rawText = typeof scene.text === 'function' ? scene.text() : scene.text;
+    const rawChoices = typeof scene.choices === 'function' ? scene.choices() : scene.choices;
+
     // 替换文本中的变量
-    let text = scene.text.replace(/{girlName}/g, gameState.girlName)
+    const dayPassed = 21 - gameState.daysLeft;
+    let text = rawText.replace(/{girlName}/g, gameState.girlName)
                         .replace(/{manName}/g, gameState.manName)
                         .replace(/{daysLeft}/g, gameState.daysLeft)
                         .replace(/{memoryLevel}/g, gameState.memoryLevel)
                         .replace(/{suspicion}/g, gameState.suspicion)
-                        .replace(/{corruptionLevel}/g, gameState.corruptionLevel);
+                        .replace(/{corruptionLevel}/g, gameState.corruptionLevel)
+                        .replace(/{21 - gameState.daysLeft}/g, dayPassed)
+                        .replace(/{gameState.memoryLevel}/g, gameState.memoryLevel)
+                        .replace(/{gameState.cluesFound.length}/g, gameState.cluesFound.length);
     
     // 逐句呈现效果
     const storyContainer = document.getElementById('storyText');
@@ -1285,8 +1288,8 @@ function loadScene(sceneId) {
     const choicesContainer = document.getElementById('choicesContainer');
     choicesContainer.innerHTML = '';
 
-    if (scene.choices && scene.choices.length > 0) {
-        scene.choices.forEach(choice => {
+    if (rawChoices && rawChoices.length > 0) {
+        rawChoices.forEach(choice => {
             const btn = document.createElement('button');
             btn.className = 'choice-btn';
             if (choice.type === 'danger') btn.classList.add('danger');
